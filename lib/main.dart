@@ -28,6 +28,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -177,6 +178,19 @@ class _VoiceChessAppState extends State<VoiceChessApp> {
         final i18n = I18n(appState.settings.language);
         return MaterialApp(
           title: i18n.appTitle,
+          // 👇 Cambia el idioma según el ajuste guardado
+          locale: appState.settings.language == AppLanguage.es
+              ? const Locale('es')
+              : const Locale('en'),
+          supportedLocales: const [
+            Locale('es'),
+            Locale('en'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
             useMaterial3: true,
