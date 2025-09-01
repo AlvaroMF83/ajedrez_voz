@@ -1,0 +1,22 @@
+{
+  "homeTitle": "Voice Chess",
+  "start": "Start",
+  "settings": "Settings",
+  "exit": "Exit",
+  "exitConfirm": "Do you want to exit the app?",
+  "cancel": "Cancel",
+  "change": "Change",
+  "language": "Language",
+  "darkMode": "Dark mode",
+  "voiceInput": "Voice input",
+  "voiceInputDesc": "Play by dictating moves",
+  "visualDifficulty": "Visual difficulty",
+  "visualNormal": "Normal (standard pieces)",
+  "visualSameColorPieces": "Same-color pieces",
+  "visualColoredDiscs": "Colored discs",
+  "visualMonochromeDiscs": "Monochrome discs",
+  "visualNoPieces": "No pieces",
+  "game": "Game",
+  "moveHint": "Enter a move (e.g. e2e4 or \"knight g1 f3\")",
+  "playEngine": "Engine move"
+}

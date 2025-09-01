@@ -1,0 +1,22 @@
+{
+  "homeTitle": "Ajedrez por Voz",
+  "start": "Empezar",
+  "settings": "Configuración",
+  "exit": "Salir",
+  "exitConfirm": "¿Quieres salir de la aplicación?",
+  "cancel": "Cancelar",
+  "change": "Cambiar",
+  "language": "Idioma",
+  "darkMode": "Modo oscuro",
+  "voiceInput": "Entrada por voz",
+  "voiceInputDesc": "Jugar dictando movimientos",
+  "visualDifficulty": "Dificultad visual",
+  "visualNormal": "Normal (piezas estándar)",
+  "visualSameColorPieces": "Piezas del mismo color",
+  "visualColoredDiscs": "Discos de colores",
+  "visualMonochromeDiscs": "Discos monocromos",
+  "visualNoPieces": "Sin piezas",
+  "game": "Partida",
+  "moveHint": "Introduce un movimiento (p.ej. e2e4 o \"caballo g1 f3\")",
+  "playEngine": "Juega la máquina"
+}
