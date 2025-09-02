@@ -3,7 +3,7 @@
 // =========================
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'settings_controller.dart';
+import 'settings_models.dart';
 
 class SettingsService {
   static const _kTheme = 'themeMode';
@@ -11,6 +11,8 @@ class SettingsService {
   static const _kCountry = 'countryCode';
   static const _kVoice = 'voiceEnabled';
   static const _kVisual = 'visualMode';
+  static const _kEnginePref = 'enginePref';
+  static const _kEngineSkill = 'engineSkill';
 
   Future<ThemeMode> loadThemeMode() async {
     final p = await SharedPreferences.getInstance();
@@ -28,7 +30,7 @@ class SettingsService {
     final p = await SharedPreferences.getInstance();
     final code = p.getString(_kLang) ?? 'es';
     final country = p.getString(_kCountry);
-    return Locale(code, country);
+    return Locale(code, (country == null || country.isEmpty) ? null : country);
   }
 
   Future<void> saveLocale(Locale locale) async {
@@ -56,5 +58,26 @@ class SettingsService {
   Future<void> saveVisualMode(VisualMode m) async {
     final p = await SharedPreferences.getInstance();
     await p.setInt(_kVisual, m.index);
+  }
+
+  Future<EnginePref> loadEnginePref() async {
+    final p = await SharedPreferences.getInstance();
+    final v = p.getInt(_kEnginePref) ?? 0;
+    return EnginePref.values[v.clamp(0, EnginePref.values.length - 1)];
+  }
+
+  Future<void> saveEnginePref(EnginePref pref) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setInt(_kEnginePref, pref.index);
+  }
+
+  Future<int> loadEngineSkill() async {
+    final p = await SharedPreferences.getInstance();
+    return (p.getInt(_kEngineSkill) ?? 8).clamp(0, 20);
+  }
+
+  Future<void> saveEngineSkill(int s) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setInt(_kEngineSkill, s.clamp(0, 20));
   }
 }

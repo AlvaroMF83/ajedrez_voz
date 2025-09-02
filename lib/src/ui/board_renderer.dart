@@ -1,90 +1,98 @@
-// =========================
-// lib/src/ui/board_renderer.dart
-// =========================
 import 'package:flutter/material.dart';
-import '../settings/settings_controller.dart';
-
-class BoardSquare {
-  final String? piece; // letra FEN / null
-  BoardSquare(this.piece);
-  bool get occupied => piece != null;
-  bool get isWhite => occupied && piece! == piece!.toUpperCase();
-}
+import 'package:ajedrez_voz/src/settings/settings_models.dart';
+import 'package:ajedrez_voz/src/model/board_square.dart';
 
 class BoardRenderer extends StatelessWidget {
-  final List<BoardSquare> position; // 64 squares, a8..h1
-  final List<int>? lastMove;        // indices [from,to]
   final VisualMode visualMode;
-  final bool perspectiveWhite;
+  final List<List<BoardSquare>> board; // 8x8
+  final void Function(int row, int col)? onSquareTap;
+  final int? selectedRow;
+  final int? selectedCol;
+  final List<int>? lastMoveSquares;
 
   const BoardRenderer({
     super.key,
-    required this.position,
-    required this.lastMove,
     required this.visualMode,
-    required this.perspectiveWhite,
+    required this.board,
+    this.onSquareTap,
+    this.selectedRow,
+    this.selectedCol,
+    this.lastMoveSquares,
   });
-
-  static const _unicode = {
-    'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
-    'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
-  };
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      reverse: !perspectiveWhite,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
-      itemCount: 64,
-      itemBuilder: (context, index) {
-        final file = index % 8;
-        final rank = index ~/ 8;
-        final light = (file + rank) % 2 == 0;
-        final isLast = lastMove != null && lastMove!.contains(index);
-        final sq = position[index];
-
-        return Container(
-          decoration: BoxDecoration(
-            color: isLast
-                ? Colors.amber.withOpacity(0.6)
-                : (light ? Colors.brown.shade200 : Colors.brown.shade600),
-            border: Border.all(width: 0.5, color: Colors.black26),
+    return Column(
+      children: [
+        for (int r = 0; r < 8; r++)
+          Expanded(
+            child: Row(
+              children: [
+                for (int c = 0; c < 8; c++)
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onSquareTap?.call(r, c),
+                      child: _buildCell(context, board[r][c], r, c),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          child: _buildCell(context, sq),
-        );
-      },
+      ],
     );
   }
 
-  Widget _buildCell(BuildContext context, BoardSquare sq) {
+  Widget _buildCell(BuildContext context, BoardSquare sq, int row, int col) {
+    final isSelected = selectedRow == row && selectedCol == col;
+    final index = row * 8 + col;
+    final isHighlighted = lastMoveSquares?.contains(index) ?? false;
+
+    final background = isSelected
+      ? Colors.yellow.withOpacity(0.5)
+      : isHighlighted
+          ? Colors.orange.withOpacity(0.4)
+          : (sq.light ? const Color(0xFFF0D9B5) : const Color(0xFFB58863));
+
     switch (visualMode) {
       case VisualMode.normal:
-        if (!sq.occupied) return const SizedBox();
-        final ch = _unicode[sq.piece!];
-        return Center(child: Text(ch ?? '', style: const TextStyle(fontSize: 28)));
+        return _cell(
+          background: background,
+          child: Text(
+            sq.pieceSymbol,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 24),
+          ),
+        );
       case VisualMode.sameColorPieces:
-        return sq.occupied ? Center(child: _disc(filled: true)) : const SizedBox();
+        return _cell(
+          background: background,
+          child: const Text("●", textAlign: TextAlign.center, style: TextStyle(fontSize: 20)),
+        );
       case VisualMode.coloredDiscs:
-        return sq.occupied ? Center(child: _disc(filled: true, white: sq.isWhite)) : const SizedBox();
+        return _cell(
+          background: background,
+          child: Icon(Icons.circle, size: 16, color: _discColor(sq.pieceSymbol)),
+        );
       case VisualMode.monochromeDiscs:
-        return sq.occupied ? Center(child: _disc(filled: false)) : const SizedBox();
+        return _cell(
+          background: background,
+          child: const Icon(Icons.circle, size: 16),
+        );
       case VisualMode.noPieces:
-        return const SizedBox();
+        return _cell(background: background);
     }
   }
 
-  Widget _disc({required bool filled, bool? white}) {
+  Color _discColor(String symbol) {
+    if (symbol.isEmpty) return Colors.transparent;
+    final isWhite = symbol == symbol.toUpperCase();
+    return isWhite ? Colors.blue : Colors.red;
+  }
+
+  Widget _cell({required Color background, Widget? child}) {
     return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: filled
-            ? (white == null ? Colors.black87 : (white ? Colors.white : Colors.black))
-            : Colors.transparent,
-        border: Border.all(color: Colors.black87, width: 2),
-      ),
+      decoration: BoxDecoration(color: background),
+      child: Center(child: child ?? const SizedBox.shrink()),
     );
   }
 }

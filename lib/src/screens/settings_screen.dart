@@ -4,40 +4,51 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../settings/settings_controller.dart';
-import '../settings/localization_service.dart';
+import '../settings/settings_models.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final t = LocalizationService.t(context);
-    final settings = context.watch<SettingsController>();
-
+    final s = context.watch<SettingsController>();
     return Scaffold(
-      appBar: AppBar(title: Text(t.settings)),
+      appBar: AppBar(title: const Text('Configuración')),
       body: ListView(
         children: [
           SwitchListTile(
-            title: Text(t.voiceInput),
-            subtitle: Text(t.voiceInputDesc),
-            value: settings.voiceEnabled,
-            onChanged: (v) => settings.setVoiceEnabled(v),
+            title: const Text('Entrada por voz'),
+            subtitle: const Text('Jugar dictando movimientos'),
+            value: s.voiceEnabled,
+            onChanged: (v) => s.setVoiceEnabled(v),
           ),
           ListTile(
-            title: Text(t.visualDifficulty),
-            subtitle: Text(settings.visualModeLabel(t)),
+            title: const Text('Dificultad visual'),
+            subtitle: Text(s.visualModeLabel(const Strings(
+              visualNormal: 'Normal (piezas estándar)',
+              visualSameColorPieces: 'Piezas del mismo color',
+              visualColoredDiscs: 'Discos de colores',
+              visualMonochromeDiscs: 'Discos monocromos',
+              visualNoPieces: 'Sin piezas',
+            ))),
             onTap: () => _pickVisualMode(context),
           ),
+          const Divider(),
           ListTile(
-            title: Text(t.language),
-            subtitle: Text(settings.locale.languageCode.toUpperCase()),
-            onTap: () => Navigator.pushNamed(context, '/settings/language'),
+            title: const Text('Motor'),
+            subtitle: Text(s.enginePrefLabel()),
+            onTap: () => _pickEngine(context),
           ),
+          ListTile(
+            title: const Text('Dificultad del motor'),
+            subtitle: Text('Skill ${s.engineSkill}'),
+            onTap: () => _pickSkill(context),
+          ),
+          const Divider(),
           SwitchListTile(
-            title: Text(t.darkMode),
-            value: settings.themeMode == ThemeMode.dark,
-            onChanged: (v) => settings.setThemeMode(v ? ThemeMode.dark : ThemeMode.light),
+            title: const Text('Modo oscuro'),
+            value: s.themeMode == ThemeMode.dark,
+            onChanged: (v) => s.setThemeMode(v ? ThemeMode.dark : ThemeMode.light),
           ),
         ],
       ),
@@ -45,23 +56,80 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _pickVisualMode(BuildContext context) async {
-    final settings = context.read<SettingsController>();
-    final t = LocalizationService.t(context);
+    final s = context.read<SettingsController>();
     final result = await showModalBottomSheet<VisualMode>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text(t.visualNormal), onTap: () => Navigator.pop(ctx, VisualMode.normal)),
-            ListTile(title: Text(t.visualSameColorPieces), onTap: () => Navigator.pop(ctx, VisualMode.sameColorPieces)),
-            ListTile(title: Text(t.visualColoredDiscs), onTap: () => Navigator.pop(ctx, VisualMode.coloredDiscs)),
-            ListTile(title: Text(t.visualMonochromeDiscs), onTap: () => Navigator.pop(ctx, VisualMode.monochromeDiscs)),
-            ListTile(title: Text(t.visualNoPieces), onTap: () => Navigator.pop(ctx, VisualMode.noPieces)),
+            RadioListTile(value: VisualMode.normal, groupValue: s.visualMode, onChanged: (v) => Navigator.pop(ctx, v), title: const Text('Normal (piezas estándar)')),
+            RadioListTile(value: VisualMode.sameColorPieces, groupValue: s.visualMode, onChanged: (v) => Navigator.pop(ctx, v), title: const Text('Piezas del mismo color')),
+            RadioListTile(value: VisualMode.coloredDiscs, groupValue: s.visualMode, onChanged: (v) => Navigator.pop(ctx, v), title: const Text('Discos de colores')),
+            RadioListTile(value: VisualMode.monochromeDiscs, groupValue: s.visualMode, onChanged: (v) => Navigator.pop(ctx, v), title: const Text('Discos monocromos')),
+            RadioListTile(value: VisualMode.noPieces, groupValue: s.visualMode, onChanged: (v) => Navigator.pop(ctx, v), title: const Text('Sin piezas')),
           ],
         ),
       ),
     );
-    if (result != null) settings.setVisualMode(result);
+    if (result != null) s.setVisualMode(result);
+  }
+
+  Future<void> _pickEngine(BuildContext context) async {
+    final s = context.read<SettingsController>();
+    final sel = await showModalBottomSheet<EnginePref>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: EnginePref.values.map((p) {
+            final label = switch (p) {
+              EnginePref.auto => 'Auto (Web=WASM, Android/Desktop=nativo)',
+              EnginePref.stockfish => 'Stockfish (forzar si disponible)',
+              EnginePref.fallback => 'Fallback simple (sin motor)',
+            };
+            return RadioListTile<EnginePref>(
+              title: Text(label),
+              value: p,
+              groupValue: s.enginePref,
+              onChanged: (v) => Navigator.pop(ctx, v),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+    if (sel != null) await s.setEnginePref(sel);
+  }
+
+  Future<void> _pickSkill(BuildContext context) async {
+    final s = context.read<SettingsController>();
+    int temp = s.engineSkill;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Dificultad del motor (0–20)'),
+        content: StatefulBuilder(
+          builder: (_, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Slider(
+                value: temp.toDouble(),
+                min: 0,
+                max: 20,
+                divisions: 20,
+                label: '$temp',
+                onChanged: (v) => setState(() => temp = v.round()),
+              ),
+              Text('Skill: $temp'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (ok == true) await s.setEngineSkill(temp);
   }
 }

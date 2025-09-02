@@ -4,19 +4,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../routes.dart';
-import '../settings/localization_service.dart';
 import '../settings/settings_controller.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final t = LocalizationService.t(context);
     final settings = context.watch<SettingsController>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.homeTitle)),
+      appBar: AppBar(title: Text('homeTitle'.tr())),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -24,28 +23,28 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _PrimaryButton(
-                label: t.start,
+                label: 'start'.tr(),
                 onPressed: () => Navigator.pushNamed(context, AppRoutes.chooseColor),
               ),
               const SizedBox(height: 16),
               _PrimaryButton(
-                label: t.settings,
+                label: 'settings'.tr(),
                 onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
               ),
               const SizedBox(height: 16),
               _PrimaryButton(
-                label: t.exit,
+                label: 'exit'.tr(),
                 onPressed: () => _confirmExit(context),
               ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('${t.language}: ${settings.locale.languageCode.toUpperCase()}'),
+                  Text('${'language'.tr()}: ${settings.locale.languageCode.toUpperCase()}'),
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, AppRoutes.settingsLanguage),
-                    child: Text(t.change),
+                    child: Text('change'.tr()),
                   ),
                 ],
               ),
@@ -57,15 +56,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _confirmExit(BuildContext context) async {
-    final t = LocalizationService.t(context);
     final shouldClose = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(t.exit),
-        content: Text(t.exitConfirm),
+        title: Text('exit'.tr()),
+        content: Text('exitConfirm'.tr()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t.exit)),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel'.tr())),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text('exit'.tr())),
         ],
       ),
     );
